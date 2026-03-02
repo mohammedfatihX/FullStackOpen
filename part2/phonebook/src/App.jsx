@@ -1,8 +1,9 @@
-import "./App.css";
+import "./index.css";
 import { useState, useEffect } from "react";
 import Filter from "./component/Filter";
 import Form from "./component/Form";
 import Persons from "./component/Persons";
+import Notification from "./component/Notification";
 import personService from "./service/person";
 
 function App() {
@@ -10,7 +11,10 @@ function App() {
   const [newPerson, setNewPerson] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [search, setSearch] = useState("");
-
+  const [notification, setNotification] = useState({
+    isError: false,
+    message: null,
+  });
   const personsToShow =
     search === ""
       ? persons
@@ -52,7 +56,19 @@ function App() {
                 .filter((person) => person.id !== isPersonExist.id)
                 .concat(person),
             ),
-          );
+          )
+          .catch((error) => {
+            (setNotification({
+              isError: true,
+              message: `information of ${isPersonExist.name} has already been removed from server`,
+            }),
+              setTimeout(() => {
+                setNotification({ message: null });
+              }, 3000));
+            setPersons((persons) =>
+              persons.filter((person) => person.id !== isPersonExist.id),
+            );
+          });
       }
     } else {
       let tmpPerson = {
@@ -64,6 +80,10 @@ function App() {
         setPersons((persons) => persons.concat(person));
         setNewPerson("");
         setNewPhone("");
+        (setNotification({ isError: false, message: `Added ${person.name}` }),
+          setTimeout(() => {
+            setNotification({ message: null });
+          }, 3000));
       });
     }
   };
@@ -94,9 +114,10 @@ function App() {
 
   return (
     <div>
+      <h1>PhoneBook</h1>
+      <Notification notification={notification} />
       <Filter search={search} onChangeSearch={onChangeSearch} />
       <hr style={{ border: "2px solid black" }} />
-      <h1>PhoneBook</h1>
       <br />
       <Form
         newPerson={newPerson}
